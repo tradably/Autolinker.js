@@ -18,7 +18,8 @@ const clone           = require( 'gulp-clone' ),
       umd             = require( 'gulp-umd' ),
       JsDuck          = require( 'gulp-jsduck' ),
       KarmaServer     = require( 'karma' ).Server;
-
+      
+const babel = require('gulp-babel');
 
 
 // Project configuration
@@ -45,6 +46,9 @@ gulp.task( 'update-tld-list', updateTldRegex );
 
 function buildTask() {
 	var combinedSrcFile = gulp.src( srcFiles )
+      .pipe(babel({
+                presets: ['es2015', 'stage-2']
+            }))
 		.pipe( concat( distFilename ) )
 		.pipe( umd() )
 		.pipe( header( banner, { pkg: pkg } ) );
