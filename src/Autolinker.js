@@ -118,6 +118,7 @@ var Autolinker = function( cfg ) {
 	this.phone = typeof cfg.phone === 'boolean' ? cfg.phone : true;
 	this.hashtag = cfg.hashtag || false;
 	this.mention = cfg.mention || false;
+	this.stockSymbol = cfg.stockSymbol || false;
 	this.newWindow = typeof cfg.newWindow === 'boolean' ? cfg.newWindow : true;
 	this.stripPrefix = this.normalizeStripPrefixCfg( cfg.stripPrefix );
 	this.stripTrailingSlash = typeof cfg.stripTrailingSlash === 'boolean' ? cfg.stripTrailingSlash : true;
@@ -681,6 +682,7 @@ Autolinker.prototype = {
 		var remove = Autolinker.Util.remove;
 
 		if( !this.hashtag ) remove( matches, function( match ) { return match.getType() === 'hashtag'; } );
+		if( !this.stockSymbol ) remove( matches, function( match ) { return match.getType() === 'stockSymbol'; } );
 		if( !this.email )   remove( matches, function( match ) { return match.getType() === 'email'; } );
 		if( !this.phone )   remove( matches, function( match ) { return match.getType() === 'phone'; } );
 		if( !this.mention ) remove( matches, function( match ) { return match.getType() === 'mention'; } );
@@ -849,6 +851,7 @@ Autolinker.prototype = {
 
 			var matchers = [
 				new matchersNs.Hashtag( { tagBuilder: tagBuilder, serviceName: this.hashtag } ),
+				new matchersNs.StockSymbol( { tagBuilder: tagBuilder, serviceName: this.hashtag } ),
 				new matchersNs.Email( { tagBuilder: tagBuilder } ),
 				new matchersNs.Phone( { tagBuilder: tagBuilder } ),
 				new matchersNs.Mention( { tagBuilder: tagBuilder, serviceName: this.mention } ),
