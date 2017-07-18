@@ -23,7 +23,7 @@ Autolinker.matcher.StockSymbol = Autolinker.Util.extend( Autolinker.matcher.Matc
 	 * @private
 	 * @property {RegExp} matcherRegex
 	 */
-	matcherRegex : new RegExp( '$[_.' + Autolinker.RegexLib.alphaNumericCharsStr + ']{1,12}', 'g' ),
+	matcherRegex : new RegExp( '$[_\.' + Autolinker.RegexLib.alphaNumericCharsStr + ']{1,12}', 'g' ),
 
 	/**
 	 * The regular expression to use to check the character before a username match to
