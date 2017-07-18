@@ -872,7 +872,7 @@ Autolinker.prototype = {
 			var matchersNs = Autolinker.matcher,
 			    tagBuilder = this.getTagBuilder();
 
-			var matchers = [new matchersNs.Hashtag({ tagBuilder: tagBuilder, serviceName: this.hashtag }), new matchersNs.StockSymbol({ tagBuilder: tagBuilder, serviceName: this.hashtag }), new matchersNs.Email({ tagBuilder: tagBuilder }), new matchersNs.Phone({ tagBuilder: tagBuilder }), new matchersNs.Mention({ tagBuilder: tagBuilder, serviceName: this.mention }), new matchersNs.Url({ tagBuilder: tagBuilder, stripPrefix: this.stripPrefix, stripTrailingSlash: this.stripTrailingSlash })];
+			var matchers = [new matchersNs.Hashtag({ tagBuilder: tagBuilder, serviceName: this.hashtag }), new matchersNs.StockSymbol({ tagBuilder: tagBuilder, serviceName: 'yahoo' }), new matchersNs.Email({ tagBuilder: tagBuilder }), new matchersNs.Phone({ tagBuilder: tagBuilder }), new matchersNs.Mention({ tagBuilder: tagBuilder, serviceName: this.mention }), new matchersNs.Url({ tagBuilder: tagBuilder, stripPrefix: this.stripPrefix, stripTrailingSlash: this.stripTrailingSlash })];
 
 			return this.matchers = matchers;
 		} else {

@@ -681,11 +681,11 @@ Autolinker.prototype = {
 	removeUnwantedMatches : function( matches ) {
 		var remove = Autolinker.Util.remove;
 
-		if( !this.hashtag ) remove( matches, function( match ) { return match.getType() === 'hashtag'; } );
+		if( !this.hashtag ) 		remove( matches, function( match ) { return match.getType() === 'hashtag'; } );
 		if( !this.stockSymbol ) remove( matches, function( match ) { return match.getType() === 'stockSymbol'; } );
-		if( !this.email )   remove( matches, function( match ) { return match.getType() === 'email'; } );
-		if( !this.phone )   remove( matches, function( match ) { return match.getType() === 'phone'; } );
-		if( !this.mention ) remove( matches, function( match ) { return match.getType() === 'mention'; } );
+		if( !this.email )   		remove( matches, function( match ) { return match.getType() === 'email'; } );
+		if( !this.phone )   		remove( matches, function( match ) { return match.getType() === 'phone'; } );
+		if( !this.mention ) 		remove( matches, function( match ) { return match.getType() === 'mention'; } );
 		if( !this.urls.schemeMatches ) {
 			remove( matches, function( m ) { return m.getType() === 'url' && m.getUrlMatchType() === 'scheme'; } );
 		}
@@ -851,7 +851,7 @@ Autolinker.prototype = {
 
 			var matchers = [
 				new matchersNs.Hashtag( { tagBuilder: tagBuilder, serviceName: this.hashtag } ),
-				new matchersNs.StockSymbol( { tagBuilder: tagBuilder, serviceName: this.hashtag } ),
+				new matchersNs.StockSymbol( { tagBuilder: tagBuilder, serviceName: 'yahoo' } ),
 				new matchersNs.Email( { tagBuilder: tagBuilder } ),
 				new matchersNs.Phone( { tagBuilder: tagBuilder } ),
 				new matchersNs.Mention( { tagBuilder: tagBuilder, serviceName: this.mention } ),
