@@ -174,6 +174,7 @@ function createSrcFilesList() {
 		'src/match/Match.js',
 		'src/match/Email.js',
 		'src/match/Hashtag.js',
+      'src/match/StockSymbol.js',
 		'src/match/Phone.js',
 		'src/match/Mention.js',
 		'src/match/Url.js',
@@ -181,6 +182,7 @@ function createSrcFilesList() {
 		'src/matcher/Matcher.js',
 		'src/matcher/Email.js',
 		'src/matcher/Hashtag.js',
+      'src/matcher/StockSymbol.js',
 		'src/matcher/Phone.js',
 		'src/matcher/Mention.js',
 		'src/matcher/Url.js',
@@ -235,4 +237,3 @@ function updateTldRegex(){
 		}))
 		.pipe(gulp.dest('./src/matcher/'));
 }
-

@@ -2668,6 +2668,110 @@ Autolinker.match.Hashtag = Autolinker.Util.extend( Autolinker.match.Match, {
 
 /*global Autolinker */
 /**
+ * @class Autolinker.match.StockSymbol
+ * @extends Autolinker.match.Match
+ *
+ * Represents a StockSymbol match found in an input string which should be
+ * Autolinked.
+ *
+ * See this class's superclass ({@link Autolinker.match.Match}) for more
+ * details.
+ */
+Autolinker.match.StockSymbol = Autolinker.Util.extend( Autolinker.match.Match, {
+
+	/**
+	 * @cfg {String} serviceName
+	 *
+	 * The service to point stock symbol matches to. See {@link Autolinker#stockSymbol}
+	 * for available values.
+	 */
+
+	/**
+	 * @cfg {String} stockSymbol (required)
+	 *
+	 * The Stock symbol that was matched, without the '$'.
+	 */
+
+
+	/**
+	 * @constructor
+	 * @param {Object} cfg The configuration properties for the Match
+	 *   instance, specified in an Object (map).
+	 */
+	constructor : function( cfg ) {
+		Autolinker.match.Match.prototype.constructor.call( this, cfg );
+
+		// TODO: if( !serviceName ) throw new Error( '`serviceName` cfg required' );
+		if( !cfg.stockSymbol ) throw new Error( '`stockSymbol` cfg required' );
+
+		this.serviceName = cfg.serviceName;
+		this.stockSymbol = cfg.stockSymbol;
+	},
+
+
+	/**
+	 * Returns the type of match that this class represents.
+	 *
+	 * @return {String}
+	 */
+	getType : function() {
+		return 'stockSymbol';
+	},
+
+
+	/**
+	 * Returns the configured {@link #serviceName} to point the StockSymbol to.
+	 * Ex: 'yahoo', 'investing', 'tradingview'.
+	 *
+	 * @return {String}
+	 */
+	getServiceName : function() {
+		return this.serviceName;
+	},
+
+
+	/**
+	 * Returns the matched stockSymbol, without the '$' character.
+	 *
+	 * @return {String}
+	 */
+	getStockSymbol : function() {
+		return this.stockSymbol;
+	},
+
+
+	/**
+	 * Returns the anchor href that should be generated for the match.
+	 *
+	 * @return {String}
+	 */
+	getAnchorHref : function() {
+		var serviceName = this.serviceName,
+		    stockSymbol = this.stockSymbol;
+
+		switch( serviceName ) {
+			case 'yahoo' :
+				return 'https://finance.yahoo.com/quote/' + stockSymbol;
+
+			default :  // Shouldn't happen because Autolinker's constructor should block any invalid values, but just in case.
+				throw new Error( 'Unknown service name to point stockSymbol to: ', serviceName );
+		}
+	},
+
+
+	/**
+	 * Returns the anchor text that should be generated for the match.
+	 *
+	 * @return {String}
+	 */
+	getAnchorText : function() {
+		return '$' + this.stockSymbol;
+	}
+
+} );
+
+/*global Autolinker */
+/**
  * @class Autolinker.match.Phone
  * @extends Autolinker.match.Match
  *
@@ -3332,6 +3436,94 @@ Autolinker.matcher.Hashtag = Autolinker.Util.extend( Autolinker.matcher.Matcher,
 } );
 /*global Autolinker */
 /**
+ * @class Autolinker.matcher.StockSymbol
+ * @extends Autolinker.matcher.Matcher
+ *
+ * Matcher to find StockSymbol matches in an input string.
+ */
+Autolinker.matcher.StockSymbol = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
+
+	/**
+	 * @cfg {String} serviceName
+	 *
+	 * The service to point stockSymbol matches to. See {@link Autolinker#stockSymbol}
+	 * for available values.
+	 */
+
+
+	/**
+	 * The regular expression to match stockSymbols. Example match:
+	 *
+	 *     #asdf
+	 *
+	 * @private
+	 * @property {RegExp} matcherRegex
+	 */
+	matcherRegex : new RegExp( '$[_.' + Autolinker.RegexLib.alphaNumericCharsStr + ']{1,12}', 'g' ),
+
+	/**
+	 * The regular expression to use to check the character before a username match to
+	 * make sure we didn't accidentally match an email address.
+	 *
+	 * For example, the string "asdf@asdf.com" should not match "@asdf" as a username.
+	 *
+	 * @private
+	 * @property {RegExp} nonWordCharRegex
+	 */
+	nonWordCharRegex : new RegExp( '[^' + Autolinker.RegexLib.alphaNumericCharsStr + ']' ),
+
+
+	/**
+	 * @constructor
+	 * @param {Object} cfg The configuration properties for the Match instance,
+	 *   specified in an Object (map).
+	 */
+	constructor : function( cfg ) {
+		Autolinker.matcher.Matcher.prototype.constructor.call( this, cfg );
+
+		this.serviceName = cfg.serviceName;
+	},
+
+
+	/**
+	 * @inheritdoc
+	 */
+	parseMatches : function( text ) {
+		var matcherRegex = this.matcherRegex,
+		    nonWordCharRegex = this.nonWordCharRegex,
+		    serviceName = this.serviceName,
+		    tagBuilder = this.tagBuilder,
+		    matches = [],
+		    match;
+
+		while( ( match = matcherRegex.exec( text ) ) !== null ) {
+			var offset = match.index,
+			    prevChar = text.charAt( offset - 1 );
+
+			// If we found the match at the beginning of the string, or we found the match
+			// and there is a whitespace char in front of it (meaning it is not a '#' char
+			// in the middle of a word), then it is a stockSymbol match.
+			if( offset === 0 || nonWordCharRegex.test( prevChar ) ) {
+				var matchedText = match[ 0 ],
+				    stockSymbol = match[ 0 ].slice( 1 );  // strip off the '$' character at the beginning
+
+				matches.push( new Autolinker.match.StockSymbol( {
+					tagBuilder  : tagBuilder,
+					matchedText : matchedText,
+					offset      : offset,
+					serviceName : serviceName,
+					stockSymbol : stockSymbol
+				} ) );
+			}
+		}
+
+		return matches;
+	}
+
+} );
+
+/*global Autolinker */
+/**
  * @class Autolinker.matcher.Phone
  * @extends Autolinker.matcher.Matcher
  *
@@ -3373,7 +3565,7 @@ Autolinker.matcher.Phone = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 			var matchedText = match[0],
 				cleanNumber = matchedText.replace(/[^0-9,;#]/g, ''), // strip out non-digit characters exclude comma semicolon and #
 				plusSign = !!match[1]; // match[ 1 ] is the prefixed plus sign, if there is one
-			if (/\D/.test(match[2]) && /\D/.test(matchedText)) {
+			if (this.testMatch(match[2]) && this.testMatch(matchedText)) {
     			matches.push(new Autolinker.match.Phone({
     				tagBuilder: tagBuilder,
     				matchedText: matchedText,
@@ -3385,9 +3577,14 @@ Autolinker.matcher.Phone = Autolinker.Util.extend( Autolinker.matcher.Matcher, {
 		}
 
 		return matches;
+	},
+
+	testMatch: function(text) {
+		return /\D/.test(text);
 	}
 
 } );
+
 /*global Autolinker */
 /**
  * @class Autolinker.matcher.Mention
