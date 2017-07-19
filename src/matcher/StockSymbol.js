@@ -70,7 +70,7 @@ Autolinker.matcher.StockSymbol = Autolinker.Util.extend( Autolinker.matcher.Matc
 			// in the middle of a word), then it is a stockSymbol match.
 			if( offset === 0 || nonWordCharRegex.test( prevChar ) ) {
 				var matchedText = match[ 0 ],
-				    stockSymbol = match[ 0 ].slice( 1 );  // strip off the '$' character at the beginning
+				    stockSymbol = match[ 0 ].slice( 2 );  // strip off the '$$' character at the beginning
 
 				matches.push( new Autolinker.match.StockSymbol( {
 					tagBuilder  : tagBuilder,
