@@ -2679,7 +2679,6 @@ Autolinker.match.StockSymbol = Autolinker.Util.extend(Autolinker.match.Match, {
 		switch (serviceName) {
 			case 'yahoo':
 				return 'https://finance.yahoo.com/quote/' + stockSymbol;
-
 			default:
 				// Shouldn't happen because Autolinker's constructor should block any invalid values, but just in case.
 				throw new Error('Unknown service name to point stockSymbol to: ', serviceName);
@@ -3367,7 +3366,7 @@ Autolinker.matcher.StockSymbol = Autolinker.Util.extend(Autolinker.matcher.Match
   * @property {RegExp} matcherRegex
   */
 	// matcherRegex : new RegExp( '[\$]{1}[.' + Autolinker.RegexLib.alphaNumericCharsStr + ']{1,12}', 'g' ),
-	matcherRegex: new RegExp('[\$][' + Autolinker.RegexLib.alphaNumericCharsStr + ']{1,7}(.[a-zA-Z]{1,3})?', 'g'),
+	matcherRegex: new RegExp('[\$][' + Autolinker.RegexLib.alphaNumericCharsStr + ']{1,7}(\.[a-zA-Z]{1,3})?', 'g'),
 
 	/**
   * The regular expression to use to check the character before a username match to
