@@ -86,7 +86,6 @@ Autolinker.match.StockSymbol = Autolinker.Util.extend( Autolinker.match.Match, {
 		switch( serviceName ) {
 			case 'yahoo' :
 				return 'https://finance.yahoo.com/quote/' + stockSymbol;
-
 			default :  // Shouldn't happen because Autolinker's constructor should block any invalid values, but just in case.
 				throw new Error( 'Unknown service name to point stockSymbol to: ', serviceName );
 		}
