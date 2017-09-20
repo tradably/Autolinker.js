@@ -18,7 +18,7 @@ Autolinker.matcher.Mention = Autolinker.Util.extend( Autolinker.matcher.Matcher,
 	matcherRegexes : {
 		"twitter": new RegExp( '@[_' + Autolinker.RegexLib.alphaNumericCharsStr + ']{1,20}', 'g' ),
 		"instagram": new RegExp( '@[_.' + Autolinker.RegexLib.alphaNumericCharsStr + ']{1,50}', 'g' ),
-		"tradably": new RegExp( '@\([_. ' + Autolinker.RegexLib.alphaNumericCharsStr + ']{1,50},[=' + Autolinker.RegexLib.alphaNumericCharsStr + ']{20}\)', 'g' ),
+		"tradably": new RegExp( '@[\(][_. ' + Autolinker.RegexLib.alphaNumericCharsStr + ']{2,50},[=' + Autolinker.RegexLib.alphaNumericCharsStr + ']{20}[\)]', 'g' ),
 	},
 
 	/**

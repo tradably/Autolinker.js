@@ -145,7 +145,7 @@ var Autolinker = function Autolinker(cfg) {
 
 	// Validate the value of the `mention` cfg
 	var mention = this.mention;
-	if (mention !== false && mention !== 'twitter' && mention !== 'instagram') {
+	if (mention !== false && mention !== 'twitter' && mention !== 'instagram' && mention !== 'tradably') {
 		throw new Error("invalid `mention` cfg - see docs");
 	}
 
@@ -2840,10 +2840,15 @@ Autolinker.match.Mention = Autolinker.Util.extend(Autolinker.match.Match, {
   * @return {String}
   */
 	getMention: function getMention() {
-		var comps = this.mention.split(',');
+		if (this.serviceName === 'tradably') {
+			var comps = this.mention.split(',');
+			return {
+				mention: comps[0].slice(1),
+				id: comps[1].slice(0, 20)
+			};
+		}
 		return {
-			mention: comps[0].slice(1),
-			id: comps[1].slice(0, 20)
+			mention: this.mention
 		};
 	},
 
@@ -2882,8 +2887,11 @@ Autolinker.match.Mention = Autolinker.Util.extend(Autolinker.match.Match, {
   * @return {String}
   */
 	getAnchorText: function getAnchorText() {
-		var name = this.mention.split(',')[0];
-		return '@' + name.slice(1);
+		if (this.serviceName === 'tradably') {
+			var name = this.mention.split(',')[0];
+			return '@' + name.slice(1);
+		}
+		return this.mention;
 	},
 
 	/**
@@ -3520,7 +3528,7 @@ Autolinker.matcher.Mention = Autolinker.Util.extend(Autolinker.matcher.Matcher, 
 	matcherRegexes: {
 		"twitter": new RegExp('@[_' + Autolinker.RegexLib.alphaNumericCharsStr + ']{1,20}', 'g'),
 		"instagram": new RegExp('@[_.' + Autolinker.RegexLib.alphaNumericCharsStr + ']{1,50}', 'g'),
-		"tradably": new RegExp('@\([_. ' + Autolinker.RegexLib.alphaNumericCharsStr + ']{1,50},[=' + Autolinker.RegexLib.alphaNumericCharsStr + ']{20}\)', 'g')
+		"tradably": new RegExp('@[\(][_. ' + Autolinker.RegexLib.alphaNumericCharsStr + ']{2,50},[=' + Autolinker.RegexLib.alphaNumericCharsStr + ']{20}[\)]', 'g')
 	},
 
 	/**

@@ -57,11 +57,16 @@ Autolinker.match.Mention = Autolinker.Util.extend( Autolinker.match.Match, {
 	 * @return {String}
 	 */
 	getMention : function() {
-		let comps = this.mention.split(',');
-		return {
-			mention: comps[0].slice(1),
-			id: comps[1].slice(0, 20)
-		};
+		if (this.serviceName === 'tradably') {
+    		var comps = this.mention.split(',');
+    		return {
+    			mention: comps[0].slice(1),
+    			id: comps[1].slice(0, 20)
+    		};
+        }
+        return {
+            mention: this.mention
+        };
 	},
 
 
@@ -101,8 +106,11 @@ Autolinker.match.Mention = Autolinker.Util.extend( Autolinker.match.Match, {
 	 * @return {String}
 	 */
 	getAnchorText : function() {
-		// let name = this.mention.split(',')[0];
-		return '@AAAAA' //+ name.slice(1);
+		if (this.serviceName === 'tradably'){
+    		var name = this.mention.split(',')[0];
+    		return '@' + name.slice(1);
+        }
+        return this.mention;
 	},
 
 
