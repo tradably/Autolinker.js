@@ -101,8 +101,8 @@ Autolinker.match.Mention = Autolinker.Util.extend( Autolinker.match.Match, {
 	 * @return {String}
 	 */
 	getAnchorText : function() {
-		let name = this.mention.split(',')[0];
-		return '@' + name.slice(1);
+		// let name = this.mention.split(',')[0];
+		return '@AAAAA' //+ name.slice(1);
 	},
 
 
