@@ -2840,7 +2840,11 @@ Autolinker.match.Mention = Autolinker.Util.extend(Autolinker.match.Match, {
   * @return {String}
   */
 	getMention: function getMention() {
-		return this.mention;
+		var comps = this.mention.split(',');
+		return {
+			mention: comps[0].slice(1),
+			id: comps[1].slice(0, 20)
+		};
 	},
 
 	/**
@@ -2864,7 +2868,8 @@ Autolinker.match.Mention = Autolinker.Util.extend(Autolinker.match.Match, {
 				return 'https://twitter.com/' + this.mention;
 			case 'instagram':
 				return 'https://instagram.com/' + this.mention;
-
+			case 'tradably':
+				return 'https://tradably.com/' + this.mention;
 			default:
 				// Shouldn't happen because Autolinker's constructor should block any invalid values, but just in case.
 				throw new Error('Unknown service name to point mention to: ', this.serviceName);
@@ -2877,7 +2882,8 @@ Autolinker.match.Mention = Autolinker.Util.extend(Autolinker.match.Match, {
   * @return {String}
   */
 	getAnchorText: function getAnchorText() {
-		return '@' + this.mention;
+		var name = this.mention.split(',')[0];
+		return '@' + name.slice(1);
 	},
 
 	/**
