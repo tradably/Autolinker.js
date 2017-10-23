@@ -73,7 +73,7 @@ Autolinker.match.StockSymbol = Autolinker.Util.extend( Autolinker.match.Match, {
 		var comps = this.stockSymbol.split(',');
 		return {
 			symbol: comps[0],
-			type: comps[1]
+			type: comps[1].slice(0, 1)
 		};
 	},
 
