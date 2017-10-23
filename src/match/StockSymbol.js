@@ -70,7 +70,11 @@ Autolinker.match.StockSymbol = Autolinker.Util.extend( Autolinker.match.Match, {
 	 * @return {String}
 	 */
 	getStockSymbol : function() {
-		return this.stockSymbol;
+		var comps = this.mention.split(',');
+		return {
+			symbol: comps[0].slice(1),
+			type: comps[1]
+		};
 	},
 
 
@@ -98,7 +102,7 @@ Autolinker.match.StockSymbol = Autolinker.Util.extend( Autolinker.match.Match, {
 	 * @return {String}
 	 */
 	getAnchorText : function() {
-		return '$' + this.stockSymbol;
+		return this.stockSymbol.split(',')[0];
 	}
 
 } );
