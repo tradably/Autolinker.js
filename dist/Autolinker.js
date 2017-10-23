@@ -2664,7 +2664,11 @@ Autolinker.match.StockSymbol = Autolinker.Util.extend(Autolinker.match.Match, {
   * @return {String}
   */
 	getStockSymbol: function getStockSymbol() {
-		return this.stockSymbol;
+		var comps = this.mention.split(',');
+		return {
+			symbol: comps[0].slice(1),
+			type: comps[1]
+		};
 	},
 
 	/**
@@ -2691,7 +2695,7 @@ Autolinker.match.StockSymbol = Autolinker.Util.extend(Autolinker.match.Match, {
   * @return {String}
   */
 	getAnchorText: function getAnchorText() {
-		return '$' + this.stockSymbol;
+		return this.stockSymbol.split(',')[0];
 	}
 
 });
@@ -3380,7 +3384,7 @@ Autolinker.matcher.StockSymbol = Autolinker.Util.extend(Autolinker.matcher.Match
   * @property {RegExp} matcherRegex
   */
 	// matcherRegex : new RegExp( '[\$]{1}[.' + Autolinker.RegexLib.alphaNumericCharsStr + ']{1,12}', 'g' ),
-	matcherRegex: new RegExp('[\$]{2}[' + Autolinker.RegexLib.alphaNumericCharsStr + ']{1,7}([\.][a-zA-Z]{1,3})?', 'g'),
+	matcherRegex: new RegExp('[\$][\(][' + Autolinker.RegexLib.alphaNumericCharsStr + '_\-=@]{2,12}([\.][a-zA-Z]{1,3})?,[EICBF]{1}[\)]', 'g'),
 
 	/**
   * The regular expression to use to check the character before a username match to
