@@ -2664,9 +2664,9 @@ Autolinker.match.StockSymbol = Autolinker.Util.extend(Autolinker.match.Match, {
   * @return {String}
   */
 	getStockSymbol: function getStockSymbol() {
-		var comps = this.mention.split(',');
+		var comps = this.stockSymbol.split(',');
 		return {
-			symbol: comps[0].slice(1),
+			symbol: comps[0],
 			type: comps[1]
 		};
 	},
@@ -2695,7 +2695,7 @@ Autolinker.match.StockSymbol = Autolinker.Util.extend(Autolinker.match.Match, {
   * @return {String}
   */
 	getAnchorText: function getAnchorText() {
-		return this.stockSymbol.split(',')[0];
+		return '$' + this.stockSymbol.split(',')[0];
 	}
 
 });
