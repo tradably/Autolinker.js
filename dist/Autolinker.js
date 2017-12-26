@@ -2707,6 +2707,77 @@ Autolinker.match.StockSymbol = Autolinker.Util.extend(Autolinker.match.Match, {
 
 /*global Autolinker */
 /**
+ * @class Autolinker.match.Custom
+ * @extends Autolinker.match.Match
+ *
+ * Represents a StockSymbol match found in an input string which should be
+ * Autolinked.
+ *
+ * See this class's superclass ({@link Autolinker.match.Match}) for more
+ * details.
+ */
+Autolinker.match.Custom = Autolinker.Util.extend(Autolinker.match.Match, {
+
+	/**
+  * @cfg {String} serviceName
+  *
+  * The service to point stock symbol matches to. See {@link Autolinker#stockSymbol}
+  * for available values.
+  */
+
+	/**
+  * @cfg {String} stockSymbol (required)
+  *
+  * The Stock symbol that was matched, without the '$'.
+  */
+
+	/**
+  * @constructor
+  * @param {Object} cfg The configuration properties for the Match
+  *   instance, specified in an Object (map).
+  */
+	constructor: function constructor(cfg) {
+		Autolinker.match.Match.prototype.constructor.call(this, cfg);
+
+		// TODO: if( !serviceName ) throw new Error( '`serviceName` cfg required' );
+		if (!cfg.rawValue) throw new Error('`rawValue` cfg required');
+
+		this.rawValue = cfg.rawValue;
+	},
+
+	/**
+  * Returns the type of match that this class represents.
+  *
+  * @return {String}
+  */
+	getType: function getType() {
+		return 'custom';
+	},
+
+	/**
+  * Returns the anchor href that should be generated for the match.
+  *
+  * @return {String}
+  */
+	getAnchorHref: function getAnchorHref() {
+		return null;
+	},
+
+	/**
+  * Returns the anchor text that should be generated for the match.
+  *
+  * @return {String}
+  */
+	getAnchorText: function getAnchorText() {
+		return null;
+		// return '$' + this.stockSymbol.split(',')[0];
+	}
+
+});
+'use strict';
+
+/*global Autolinker */
+/**
  * @class Autolinker.match.Phone
  * @extends Autolinker.match.Match
  *
@@ -3447,6 +3518,70 @@ Autolinker.matcher.StockSymbol = Autolinker.Util.extend(Autolinker.matcher.Match
 		return matches;
 	}
 
+});
+'use strict';
+
+/*global Autolinker */
+/**
+ * @class Autolinker.matcher.StockSymbol
+ * @extends Autolinker.matcher.Matcher
+ *
+ * Matcher to find StockSymbol matches in an input string.
+ */
+Autolinker.matcher.StockSymbol = Autolinker.Util.extend(Autolinker.matcher.Matcher, {
+
+	/**
+  * The regular expression to use to check the character before a username match to
+  * make sure we didn't accidentally match an email address.
+  *
+  * For example, the string "asdf@asdf.com" should not match "@asdf" as a username.
+  *
+  * @private
+  * @property {RegExp} nonWordCharRegex
+  */
+	nonWordCharRegex: new RegExp('[^' + Autolinker.RegexLib.alphaNumericCharsStr + ']'),
+
+	/**
+  * @constructor
+  * @param {Object} cfg The configuration properties for the Match instance,
+  *   specified in an Object (map).
+  */
+	constructor: function constructor(cfg) {
+		Autolinker.matcher.Matcher.prototype.constructor.call(this, cfg);
+
+		this.matcherRegex = cfg.matcherRegex;
+	},
+
+	/**
+  * @inheritdoc
+  */
+	parseMatches: function parseMatches(text) {
+		var matcherRegex = this.matcherRegex,
+		    nonWordCharRegex = this.nonWordCharRegex,
+		    tagBuilder = this.tagBuilder,
+		    matches = [],
+		    match;
+
+		while ((match = matcherRegex.exec(text)) !== null) {
+			var offset = match.index,
+			    prevChar = text.charAt(offset - 1);
+
+			// If we found the match at the beginning of the string, or we found the match
+			// and there is a whitespace char in front of it (meaning it is not a '#' char
+			// in the middle of a word), then it is a stockSymbol match.
+			if (offset === 0 || nonWordCharRegex.test(prevChar)) {
+				var matchedText = match[0];
+
+				matches.push(new Autolinker.match.Custom({
+					tagBuilder: tagBuilder,
+					matchedText: matchedText,
+					offset: offset,
+					rawValue: matchedText
+				}));
+			}
+		}
+		return matches;
+	}
 });
 'use strict';
 
