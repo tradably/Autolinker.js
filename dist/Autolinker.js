@@ -139,6 +139,7 @@ var Autolinker = function Autolinker(cfg) {
 	this.hashtag = cfg.hashtag || false;
 	this.mention = cfg.mention || false;
 	this.stockSymbol = cfg.stockSymbol || false;
+	this.custom = cfg.custom || true;
 	this.newWindow = typeof cfg.newWindow === 'boolean' ? cfg.newWindow : true;
 	this.stripPrefix = this.normalizeStripPrefixCfg(cfg.stripPrefix);
 	this.stripTrailingSlash = typeof cfg.stripTrailingSlash === 'boolean' ? cfg.stripTrailingSlash : true;
@@ -708,6 +709,9 @@ Autolinker.prototype = {
 		if (!this.mention) remove(matches, function (match) {
 			return match.getType() === 'mention';
 		});
+		if (!this.custom) remove(matches, function (match) {
+			return match.getType() === 'custom';
+		});
 		if (!this.urls.schemeMatches) {
 			remove(matches, function (m) {
 				return m.getType() === 'url' && m.getUrlMatchType() === 'scheme';
@@ -872,7 +876,7 @@ Autolinker.prototype = {
 			var matchersNs = Autolinker.matcher,
 			    tagBuilder = this.getTagBuilder();
 
-			var matchers = [new matchersNs.Hashtag({ tagBuilder: tagBuilder, serviceName: this.hashtag }), new matchersNs.StockSymbol({ tagBuilder: tagBuilder, serviceName: 'yahoo' }), new matchersNs.Email({ tagBuilder: tagBuilder }), new matchersNs.Phone({ tagBuilder: tagBuilder }), new matchersNs.Mention({ tagBuilder: tagBuilder, serviceName: this.mention }), new matchersNs.Url({ tagBuilder: tagBuilder, stripPrefix: this.stripPrefix, stripTrailingSlash: this.stripTrailingSlash })];
+			var matchers = [new matchersNs.Hashtag({ tagBuilder: tagBuilder, serviceName: this.hashtag }), new matchersNs.StockSymbol({ tagBuilder: tagBuilder, serviceName: 'yahoo' }), new matchersNs.Email({ tagBuilder: tagBuilder }), new matchersNs.Phone({ tagBuilder: tagBuilder }), new matchersNs.Mention({ tagBuilder: tagBuilder, serviceName: this.mention }), new matchersNs.Custom({ tagBuilder: tagBuilder, matcherRegex: /[\$][\(][a-zA-Z0-9_\-=@]{1,12}([\.][a-zA-Z]{1,3})?,[CBEFI]{1}[\)]/g }), new matchersNs.Url({ tagBuilder: tagBuilder, stripPrefix: this.stripPrefix, stripTrailingSlash: this.stripTrailingSlash })];
 
 			return this.matchers = matchers;
 		} else {
