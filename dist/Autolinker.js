@@ -3523,12 +3523,12 @@ Autolinker.matcher.StockSymbol = Autolinker.Util.extend(Autolinker.matcher.Match
 
 /*global Autolinker */
 /**
- * @class Autolinker.matcher.StockSymbol
+ * @class Autolinker.matcher.Custom
  * @extends Autolinker.matcher.Matcher
  *
  * Matcher to find StockSymbol matches in an input string.
  */
-Autolinker.matcher.StockSymbol = Autolinker.Util.extend(Autolinker.matcher.Matcher, {
+Autolinker.matcher.Custom = Autolinker.Util.extend(Autolinker.matcher.Matcher, {
 
 	/**
   * The regular expression to use to check the character before a username match to
@@ -3560,7 +3560,7 @@ Autolinker.matcher.StockSymbol = Autolinker.Util.extend(Autolinker.matcher.Match
 		    nonWordCharRegex = this.nonWordCharRegex,
 		    tagBuilder = this.tagBuilder,
 		    matches = [],
-		    match;
+		    match = void 0;
 
 		while ((match = matcherRegex.exec(text)) !== null) {
 			var offset = match.index,
