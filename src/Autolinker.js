@@ -122,6 +122,7 @@ var Autolinker = function( cfg ) {
 	this.newWindow = typeof cfg.newWindow === 'boolean' ? cfg.newWindow : true;
 	this.stripPrefix = this.normalizeStripPrefixCfg( cfg.stripPrefix );
 	this.stripTrailingSlash = typeof cfg.stripTrailingSlash === 'boolean' ? cfg.stripTrailingSlash : true;
+	this.decodePercentEncoding = typeof cfg.decodePercentEncoding === 'boolean' ? cfg.decodePercentEncoding : true;
 
 	// Validate the value of the `mention` cfg
 	var mention = this.mention;
@@ -131,7 +132,7 @@ var Autolinker = function( cfg ) {
 
 	// Validate the value of the `hashtag` cfg
 	var hashtag = this.hashtag;
-	if( hashtag !== false && hashtag !== 'twitter' && hashtag !== 'facebook' && hashtag !== 'instagram' ) {
+	if( hashtag !== false && hashtag !== 'twitter' && hashtag !== 'facebook' && hashtag !== 'instagram' && hashtag !== 'tradably' ) {
 		throw new Error( "invalid `hashtag` cfg - see docs" );
 	}
 
@@ -352,6 +353,16 @@ Autolinker.prototype = {
 	 *
 	 *  Example when `true`: `http://google.com/` will be displayed as
 	 *  `http://google.com`.
+	 */
+
+	/**
+	 * @cfg {Boolean} [decodePercentEncoding=true]
+	 *
+	 * `true` to decode percent-encoded characters in URL matches, `false` to keep
+	 *  the percent-encoded characters.
+	 *
+	 *  Example when `true`: `https://en.wikipedia.org/wiki/San_Jos%C3%A9` will
+	 *  be displayed as `https://en.wikipedia.org/wiki/San_José`.
 	 */
 
 	/**
@@ -855,7 +866,7 @@ Autolinker.prototype = {
 				new matchersNs.Email( { tagBuilder: tagBuilder } ),
 				new matchersNs.Phone( { tagBuilder: tagBuilder } ),
 				new matchersNs.Mention( { tagBuilder: tagBuilder, serviceName: this.mention } ),
-				new matchersNs.Url( { tagBuilder: tagBuilder, stripPrefix: this.stripPrefix, stripTrailingSlash: this.stripTrailingSlash } )
+				new matchersNs.Url( { tagBuilder: tagBuilder, stripPrefix: this.stripPrefix, stripTrailingSlash: this.stripTrailingSlash, decodePercentEncoding: this.decodePercentEncoding } )
 			];
 
 			return ( this.matchers = matchers );

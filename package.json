@@ -1,6 +1,6 @@
 {
   "name": "autolinker",
-  "version": "1.4.3",
+  "version": "1.6.2",
   "description": "Utility to automatically link the URLs, email addresses, phone numbers, hashtags, and mentions (Twitter, Instagram) in a given block of text/HTML",
   "main": "dist/Autolinker.js",
   "files": [
@@ -31,6 +31,8 @@
   },
   "homepage": "https://github.com/gregjacobs/Autolinker.js",
   "devDependencies": {
+    "fast-deep-equal": "^2.0.1",
+    "fsevents": "^1.2.4",
     "gulp": "^3.9.1",
     "gulp-clone": "^1.0.0",
     "gulp-concat": "^2.6.0",
@@ -49,6 +51,7 @@
     "jasmine-core": "^2.8.0",
     "jshint": "^2.9.1",
     "jshint-stylish": "^2.1.0",
+    "json-schema-traverse": "^0.4.0",
     "karma": "^0.13.21",
     "karma-jasmine": "^0.3.7",
     "karma-phantomjs-launcher": "^1.0.0",

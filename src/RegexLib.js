@@ -48,9 +48,20 @@ Autolinker.RegexLib = (function() {
 	// See documentation below
 	var alphaNumericCharsStr = alphaCharsStr + decimalNumbersStr;
 
+	// Simplified IP regular expression
+	var ipStr = '(?:[' + decimalNumbersStr + ']{1,3}\\.){3}[' + decimalNumbersStr + ']{1,3}';
+
+	// Protected domain label which do not allow "-" character on the beginning and the end of a single label
+	var domainLabelStr = '[' + alphaNumericCharsStr + '](?:[' + alphaNumericCharsStr + '\\-]{0,61}[' + alphaNumericCharsStr + '])?';
+
+	var getDomainLabelStr = function(group) {
+		return '(?=(' + domainLabelStr + '))\\' + group;
+	};
 
 	// See documentation below
-	var domainNameRegex = new RegExp( '[' + alphaNumericCharsStr + '.\\-]*[' + alphaNumericCharsStr + '\\-]' );
+	var getDomainNameStr = function(group) {
+		return '(?:' + getDomainLabelStr(group) + '(?:\\.' + getDomainLabelStr(group + 1) + '){0,126}|' + ipStr + ')';
+	};
 
 	return {
 
@@ -84,7 +95,7 @@ Autolinker.RegexLib = (function() {
 		 *
 		 * @property {RegExp} domainNameRegex
 		 */
-		domainNameRegex : domainNameRegex,
+		getDomainNameStr : getDomainNameStr,
 
 	};
 

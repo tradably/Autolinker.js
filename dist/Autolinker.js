@@ -1,8 +1,8 @@
 /*!
  * Autolinker.js
- * 1.4.3
+ * 1.6.2
  *
- * Copyright(c) 2017 Gregory Jacobs <greg@greg-jacobs.com>
+ * Copyright(c) 2018 Gregory Jacobs <greg@greg-jacobs.com>
  * MIT License
  *
  * https://github.com/gregjacobs/Autolinker.js
@@ -142,6 +142,7 @@ var Autolinker = function Autolinker(cfg) {
 	this.newWindow = typeof cfg.newWindow === 'boolean' ? cfg.newWindow : true;
 	this.stripPrefix = this.normalizeStripPrefixCfg(cfg.stripPrefix);
 	this.stripTrailingSlash = typeof cfg.stripTrailingSlash === 'boolean' ? cfg.stripTrailingSlash : true;
+	this.decodePercentEncoding = typeof cfg.decodePercentEncoding === 'boolean' ? cfg.decodePercentEncoding : true;
 
 	// Validate the value of the `mention` cfg
 	var mention = this.mention;
@@ -151,7 +152,7 @@ var Autolinker = function Autolinker(cfg) {
 
 	// Validate the value of the `hashtag` cfg
 	var hashtag = this.hashtag;
-	if (hashtag !== false && hashtag !== 'twitter' && hashtag !== 'facebook' && hashtag !== 'instagram') {
+	if (hashtag !== false && hashtag !== 'twitter' && hashtag !== 'facebook' && hashtag !== 'instagram' && hashtag !== 'tradably') {
 		throw new Error("invalid `hashtag` cfg - see docs");
 	}
 
@@ -238,7 +239,7 @@ Autolinker.parse = function (textOrHtml, options) {
  *
  * Ex: 0.25.1
  */
-Autolinker.version = '1.4.3';
+Autolinker.version = '1.6.2';
 
 Autolinker.prototype = {
 	constructor: Autolinker, // fix constructor property
@@ -366,6 +367,16 @@ Autolinker.prototype = {
   *
   *  Example when `true`: `http://google.com/` will be displayed as
   *  `http://google.com`.
+  */
+
+	/**
+  * @cfg {Boolean} [decodePercentEncoding=true]
+  *
+  * `true` to decode percent-encoded characters in URL matches, `false` to keep
+  *  the percent-encoded characters.
+  *
+  *  Example when `true`: `https://en.wikipedia.org/wiki/San_Jos%C3%A9` will
+  *  be displayed as `https://en.wikipedia.org/wiki/San_José`.
   */
 
 	/**
@@ -872,7 +883,7 @@ Autolinker.prototype = {
 			var matchersNs = Autolinker.matcher,
 			    tagBuilder = this.getTagBuilder();
 
-			var matchers = [new matchersNs.Hashtag({ tagBuilder: tagBuilder, serviceName: this.hashtag }), new matchersNs.StockSymbol({ tagBuilder: tagBuilder, serviceName: 'yahoo' }), new matchersNs.Email({ tagBuilder: tagBuilder }), new matchersNs.Phone({ tagBuilder: tagBuilder }), new matchersNs.Mention({ tagBuilder: tagBuilder, serviceName: this.mention }), new matchersNs.Url({ tagBuilder: tagBuilder, stripPrefix: this.stripPrefix, stripTrailingSlash: this.stripTrailingSlash })];
+			var matchers = [new matchersNs.Hashtag({ tagBuilder: tagBuilder, serviceName: this.hashtag }), new matchersNs.StockSymbol({ tagBuilder: tagBuilder, serviceName: 'yahoo' }), new matchersNs.Email({ tagBuilder: tagBuilder }), new matchersNs.Phone({ tagBuilder: tagBuilder }), new matchersNs.Mention({ tagBuilder: tagBuilder, serviceName: this.mention }), new matchersNs.Url({ tagBuilder: tagBuilder, stripPrefix: this.stripPrefix, stripTrailingSlash: this.stripTrailingSlash, decodePercentEncoding: this.decodePercentEncoding })];
 
 			return this.matchers = matchers;
 		} else {
@@ -1525,8 +1536,20 @@ Autolinker.RegexLib = function () {
 	// See documentation below
 	var alphaNumericCharsStr = alphaCharsStr + decimalNumbersStr;
 
+	// Simplified IP regular expression
+	var ipStr = '(?:[' + decimalNumbersStr + ']{1,3}\\.){3}[' + decimalNumbersStr + ']{1,3}';
+
+	// Protected domain label which do not allow "-" character on the beginning and the end of a single label
+	var domainLabelStr = '[' + alphaNumericCharsStr + '](?:[' + alphaNumericCharsStr + '\\-]{0,61}[' + alphaNumericCharsStr + '])?';
+
+	var getDomainLabelStr = function getDomainLabelStr(group) {
+		return '(?=(' + domainLabelStr + '))\\' + group;
+	};
+
 	// See documentation below
-	var domainNameRegex = new RegExp('[' + alphaNumericCharsStr + '.\\-]*[' + alphaNumericCharsStr + '\\-]');
+	var getDomainNameStr = function getDomainNameStr(group) {
+		return '(?:' + getDomainLabelStr(group) + '(?:\\.' + getDomainLabelStr(group + 1) + '){0,126}|' + ipStr + ')';
+	};
 
 	return {
 
@@ -1560,7 +1583,7 @@ Autolinker.RegexLib = function () {
    *
    * @property {RegExp} domainNameRegex
    */
-		domainNameRegex: domainNameRegex
+		getDomainNameStr: getDomainNameStr
 
 	};
 }();
@@ -1788,7 +1811,11 @@ Autolinker.htmlParser.HtmlParser = Autolinker.Util.extend(Object, {
 		    // the unicode range accounts for excluding control chars, and the delete char
 		attrValueRegex = /(?:"[^"]*?"|'[^']*?'|[^'"=<>`\s]+)/,
 		    // double quoted, single quoted, or unquoted attribute values
-		nameEqualsValueRegex = attrNameRegex.source + '(?:\\s*=\\s*' + attrValueRegex.source + ')?'; // optional '=[value]'
+		optionalAttrValueRegex = '(?:\\s*?=\\s*?' + attrValueRegex.source + ')?'; // optional '=[value]'
+
+		var getNameEqualsValueRegex = function getNameEqualsValueRegex(group) {
+			return '(?=(' + attrNameRegex.source + '))\\' + group + optionalAttrValueRegex;
+		};
 
 		return new RegExp([
 		// for <!DOCTYPE> tag. Ex: <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">)
@@ -1800,13 +1827,14 @@ Autolinker.htmlParser.HtmlParser = Autolinker.Util.extend(Object, {
 		// Either:
 		// A. attr="value", or
 		// B. "value" alone (To cover example doctype tag: <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">)
-		'(?:', nameEqualsValueRegex, '|', attrValueRegex.source + ')', ')*', '>', ')', '|',
+		// *** Capturing Group 2 - Pseudo-atomic group for attrNameRegex
+		'(?:', getNameEqualsValueRegex(2), '|', attrValueRegex.source + ')', ')*', '>', ')', '|',
 
 		// All other HTML tags (i.e. tags that are not <!DOCTYPE>)
 		'(?:', '<(/)?', // Beginning of a tag or comment. Either '<' for a start tag, or '</' for an end tag.
-		// *** Capturing Group 2: The slash or an empty string. Slash ('/') for end tag, empty string for start or self-closing tag.
+		// *** Capturing Group 3: The slash or an empty string. Slash ('/') for end tag, empty string for start or self-closing tag.
 
-		'(?:', commentTagRegex.source, // *** Capturing Group 3 - A Comment Tag's Text
+		'(?:', commentTagRegex.source, // *** Capturing Group 4 - A Comment Tag's Text
 
 		'|',
 
@@ -1815,7 +1843,7 @@ Autolinker.htmlParser.HtmlParser = Autolinker.Util.extend(Object, {
 		// to fix a regex time complexity issue seen with the
 		// example in https://github.com/gregjacobs/Autolinker.js/issues/172
 		'(?:',
-		// *** Capturing Group 4 - The tag name for a tag without attributes
+		// *** Capturing Group 5 - The tag name for a tag without attributes
 		'(' + tagNameRegex.source + ')', '\\s*/?', // any trailing spaces and optional '/' before the closing '>'
 		')', '|',
 
@@ -1824,12 +1852,13 @@ Autolinker.htmlParser.HtmlParser = Autolinker.Util.extend(Object, {
 		// to fix a regex time complexity issue seen with the
 		// example in https://github.com/gregjacobs/Autolinker.js/issues/172
 		'(?:',
-		// *** Capturing Group 5 - The tag name for a tag with attributes
+		// *** Capturing Group 6 - The tag name for a tag with attributes
 		'(' + tagNameRegex.source + ')', '\\s+', // must have at least one space after the tag name to prevent ReDoS issue (issue #172)
 
 		// Zero or more attributes following the tag name
 		'(?:', '(?:\\s+|\\b)', // any number of whitespace chars before an attribute. NOTE: Using \s* here throws Chrome into an infinite loop for some reason, so using \s+|\b instead
-		nameEqualsValueRegex, // attr="value" (with optional ="value" part)
+		// *** Capturing Group 7 - Pseudo-atomic group for attrNameRegex
+		getNameEqualsValueRegex(7), // attr="value" (with optional ="value" part)
 		')*', '\\s*/?', // any trailing spaces and optional '/' before the closing '>'
 		')', ')', '>', ')'].join(""), 'gi');
 	}(),
@@ -1860,11 +1889,11 @@ Autolinker.htmlParser.HtmlParser = Autolinker.Util.extend(Object, {
 
 		while ((currentResult = htmlRegex.exec(html)) !== null) {
 			var tagText = currentResult[0],
-			    commentText = currentResult[3],
+			    commentText = currentResult[4],
 			    // if we've matched a comment
-			tagName = currentResult[1] || currentResult[4] || currentResult[5],
+			tagName = currentResult[1] || currentResult[5] || currentResult[6],
 			    // The <!DOCTYPE> tag (ex: "!DOCTYPE"), or another tag (ex: "a" or "img")
-			isClosingTag = !!currentResult[2],
+			isClosingTag = !!currentResult[3],
 			    offset = currentResult.index,
 			    inBetweenTagsText = html.substring(lastIndex, offset);
 
@@ -2971,6 +3000,11 @@ Autolinker.match.Url = Autolinker.Util.extend(Autolinker.match.Match, {
   */
 
 	/**
+  * @cfg {Boolean} decodePercentEncoding (required)
+  * @inheritdoc Autolinker#cfg-decodePercentEncoding
+  */
+
+	/**
   * @constructor
   * @param {Object} cfg The configuration properties for the Match
   *   instance, specified in an Object (map).
@@ -2984,6 +3018,7 @@ Autolinker.match.Url = Autolinker.Util.extend(Autolinker.match.Match, {
 		if (cfg.protocolRelativeMatch == null) throw new Error('`protocolRelativeMatch` cfg required');
 		if (cfg.stripPrefix == null) throw new Error('`stripPrefix` cfg required');
 		if (cfg.stripTrailingSlash == null) throw new Error('`stripTrailingSlash` cfg required');
+		if (cfg.decodePercentEncoding == null) throw new Error('`decodePercentEncoding` cfg required');
 
 		this.urlMatchType = cfg.urlMatchType;
 		this.url = cfg.url;
@@ -2991,6 +3026,7 @@ Autolinker.match.Url = Autolinker.Util.extend(Autolinker.match.Match, {
 		this.protocolRelativeMatch = cfg.protocolRelativeMatch;
 		this.stripPrefix = cfg.stripPrefix;
 		this.stripTrailingSlash = cfg.stripTrailingSlash;
+		this.decodePercentEncoding = cfg.decodePercentEncoding;
 	},
 
 	/**
@@ -3103,6 +3139,9 @@ Autolinker.match.Url = Autolinker.Util.extend(Autolinker.match.Match, {
 		if (this.stripTrailingSlash) {
 			anchorText = this.removeTrailingSlash(anchorText); // remove trailing slash, if there is one
 		}
+		if (this.decodePercentEncoding) {
+			anchorText = this.removePercentEncoding(anchorText);
+		}
 
 		return anchorText;
 	},
@@ -3161,6 +3200,22 @@ Autolinker.match.Url = Autolinker.Util.extend(Autolinker.match.Match, {
 			anchorText = anchorText.slice(0, -1);
 		}
 		return anchorText;
+	},
+
+	/**
+  * Decodes percent-encoded characters from the given `anchorText`, in preparation for the text to be displayed.
+  *
+  * @private
+  * @param {String} anchorText The text of the anchor that is being generated, for which to decode any percent-encoded characters.
+  * @return {String} The `anchorText`, with the percent-encoded characters decoded.
+  */
+	removePercentEncoding: function removePercentEncoding(anchorText) {
+		try {
+			return decodeURIComponent(anchorText.replace(/%22/gi, '&quot;').replace(/%26/gi, '&amp;').replace(/%27/gi, '&#39;').replace(/%3C/gi, '&lt;').replace(/%3E/gi, '&gt;'));
+		} catch (e) {
+			// Invalid escape sequence.
+			return anchorText;
+		}
 	}
 
 });
@@ -3238,12 +3293,15 @@ Autolinker.matcher.Email = Autolinker.Util.extend(Autolinker.matcher.Matcher, {
   */
 	matcherRegex: function () {
 		var alphaNumericChars = Autolinker.RegexLib.alphaNumericCharsStr,
-		    emailRegex = new RegExp('[' + alphaNumericChars + '\\-_\';:&=+$.,]+@'),
-		    // something@ for email addresses (a.k.a. local-part)
-		domainNameRegex = Autolinker.RegexLib.domainNameRegex,
+		    specialCharacters = '!#$%&\'*+\\-\\/=?^_`{|}~',
+		    restrictedSpecialCharacters = '\\s"(),:;<>@\\[\\]',
+		    validCharacters = alphaNumericChars + specialCharacters,
+		    validRestrictedCharacters = validCharacters + restrictedSpecialCharacters,
+		    emailRegex = new RegExp('(?:[' + validCharacters + '](?:[' + validCharacters + ']|\\.(?!\\.|@))*|\\"[' + validRestrictedCharacters + '.]+\\")@'),
+		    getDomainNameStr = Autolinker.RegexLib.getDomainNameStr,
 		    tldRegex = Autolinker.tldRegex; // match our known top level domains (TLDs)
 
-		return new RegExp([emailRegex.source, domainNameRegex.source, '\\.', tldRegex.source // '.com', '.net', etc
+		return new RegExp([emailRegex.source, getDomainNameStr(1), '\\.', tldRegex.source // '.com', '.net', etc
 		].join(""), 'gi');
 	}(),
 
@@ -3623,6 +3681,11 @@ Autolinker.matcher.Url = Autolinker.Util.extend(Autolinker.matcher.Matcher, {
   */
 
 	/**
+  * @cfg {Boolean} decodePercentEncoding (required)
+  * @inheritdoc Autolinker#decodePercentEncoding
+  */
+
+	/**
   * @private
   * @property {RegExp} matcherRegex
   *
@@ -3657,11 +3720,11 @@ Autolinker.matcher.Url = Autolinker.Util.extend(Autolinker.matcher.Matcher, {
   *     See #3 for more info.
   */
 	matcherRegex: function () {
-		var schemeRegex = /(?:[A-Za-z][-.+A-Za-z0-9]*:(?![A-Za-z][-.+A-Za-z0-9]*:\/\/)(?!\d+\/?)(?:\/\/)?)/,
+		var schemeRegex = /(?:[A-Za-z][-.+A-Za-z0-9]{0,63}:(?![A-Za-z][-.+A-Za-z0-9]{0,63}:\/\/)(?!\d+\/?)(?:\/\/)?)/,
 		    // match protocol, allow in format "http://" or "mailto:". However, do not match the first part of something like 'link:http://www.google.com' (i.e. don't match "link:"). Also, make sure we don't interpret 'google.com:8000' as if 'google.com' was a protocol here (i.e. ignore a trailing port number in this regex)
 		wwwRegex = /(?:www\.)/,
 		    // starting with 'www.'
-		domainNameRegex = Autolinker.RegexLib.domainNameRegex,
+		getDomainNameStr = Autolinker.RegexLib.getDomainNameStr,
 		    tldRegex = Autolinker.tldRegex,
 		    // match our known top level domains (TLDs)
 		alphaNumericCharsStr = Autolinker.RegexLib.alphaNumericCharsStr,
@@ -3673,11 +3736,11 @@ Autolinker.matcher.Url = Autolinker.Util.extend(Autolinker.matcher.Matcher, {
 
 		return new RegExp(['(?:', // parens to cover match for scheme (optional), and domain
 		'(', // *** Capturing group $1, for a scheme-prefixed url (ex: http://google.com)
-		schemeRegex.source, domainNameRegex.source, ')', '|', '(', // *** Capturing group $2, for a 'www.' prefixed url (ex: www.google.com)
-		'(//)?', // *** Capturing group $3 for an optional protocol-relative URL. Must be at the beginning of the string or start with a non-word character (handled later)
-		wwwRegex.source, domainNameRegex.source, ')', '|', '(', // *** Capturing group $4, for known a TLD url (ex: google.com)
+		schemeRegex.source, getDomainNameStr(2), ')', '|', '(', // *** Capturing group $4 for a 'www.' prefixed url (ex: www.google.com)
 		'(//)?', // *** Capturing group $5 for an optional protocol-relative URL. Must be at the beginning of the string or start with a non-word character (handled later)
-		domainNameRegex.source + '\\.', tldRegex.source, '(?![-' + alphaNumericCharsStr + '])', // TLD not followed by a letter, behaves like unicode-aware \b
+		wwwRegex.source, getDomainNameStr(6), ')', '|', '(', // *** Capturing group $8, for known a TLD url (ex: google.com)
+		'(//)?', // *** Capturing group $9 for an optional protocol-relative URL. Must be at the beginning of the string or start with a non-word character (handled later)
+		getDomainNameStr(10) + '\\.', tldRegex.source, '(?![-' + alphaNumericCharsStr + '])', // TLD not followed by a letter, behaves like unicode-aware \b
 		')', ')', '(?::[0-9]+)?', // port
 
 		'(?:' + urlSuffixRegex.source + ')?' // match for path, query string, and/or hash anchor - optional
@@ -3737,6 +3800,7 @@ Autolinker.matcher.Url = Autolinker.Util.extend(Autolinker.matcher.Matcher, {
 
 		this.stripPrefix = cfg.stripPrefix;
 		this.stripTrailingSlash = cfg.stripTrailingSlash;
+		this.decodePercentEncoding = cfg.decodePercentEncoding;
 	},
 
 	/**
@@ -3746,6 +3810,7 @@ Autolinker.matcher.Url = Autolinker.Util.extend(Autolinker.matcher.Matcher, {
 		var matcherRegex = this.matcherRegex,
 		    stripPrefix = this.stripPrefix,
 		    stripTrailingSlash = this.stripTrailingSlash,
+		    decodePercentEncoding = this.decodePercentEncoding,
 		    tagBuilder = this.tagBuilder,
 		    matches = [],
 		    match;
@@ -3753,11 +3818,11 @@ Autolinker.matcher.Url = Autolinker.Util.extend(Autolinker.matcher.Matcher, {
 		while ((match = matcherRegex.exec(text)) !== null) {
 			var matchStr = match[0],
 			    schemeUrlMatch = match[1],
-			    wwwUrlMatch = match[2],
-			    wwwProtocolRelativeMatch = match[3],
+			    wwwUrlMatch = match[4],
+			    wwwProtocolRelativeMatch = match[5],
 
-			//tldUrlMatch = match[ 4 ],  -- not needed at the moment
-			tldProtocolRelativeMatch = match[5],
+			//tldUrlMatch = match[ 8 ],  -- not needed at the moment
+			tldProtocolRelativeMatch = match[9],
 			    offset = match.index,
 			    protocolRelativeMatch = wwwProtocolRelativeMatch || tldProtocolRelativeMatch,
 			    prevChar = text.charAt(offset - 1);
@@ -3809,7 +3874,8 @@ Autolinker.matcher.Url = Autolinker.Util.extend(Autolinker.matcher.Matcher, {
 				protocolUrlMatch: protocolUrlMatch,
 				protocolRelativeMatch: !!protocolRelativeMatch,
 				stripPrefix: stripPrefix,
-				stripTrailingSlash: stripTrailingSlash
+				stripTrailingSlash: stripTrailingSlash,
+				decodePercentEncoding: decodePercentEncoding
 			}));
 		}
 
@@ -3994,7 +4060,11 @@ Autolinker.matcher.UrlMatchValidator = {
 	},
 
 	containsMultipleDots: function containsMultipleDots(urlMatch) {
-		return urlMatch.indexOf("..") > -1;
+		var stringBeforeSlash = urlMatch;
+		if (this.hasFullProtocolRegex.test(urlMatch)) {
+			stringBeforeSlash = urlMatch.split('://')[1];
+		}
+		return stringBeforeSlash.split('/')[0].indexOf("..") > -1;
 	},
 
 	/**
