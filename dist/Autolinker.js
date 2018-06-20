@@ -139,6 +139,7 @@ var Autolinker = function Autolinker(cfg) {
 	this.hashtag = cfg.hashtag || false;
 	this.mention = cfg.mention || false;
 	this.stockSymbol = cfg.stockSymbol || false;
+	this.custom = cfg.custom || true;
 	this.newWindow = typeof cfg.newWindow === 'boolean' ? cfg.newWindow : true;
 	this.stripPrefix = this.normalizeStripPrefixCfg(cfg.stripPrefix);
 	this.stripTrailingSlash = typeof cfg.stripTrailingSlash === 'boolean' ? cfg.stripTrailingSlash : true;
@@ -719,6 +720,9 @@ Autolinker.prototype = {
 		if (!this.mention) remove(matches, function (match) {
 			return match.getType() === 'mention';
 		});
+		if (!this.custom) remove(matches, function (match) {
+			return match.getType() === 'custom';
+		});
 		if (!this.urls.schemeMatches) {
 			remove(matches, function (m) {
 				return m.getType() === 'url' && m.getUrlMatchType() === 'scheme';
@@ -883,7 +887,7 @@ Autolinker.prototype = {
 			var matchersNs = Autolinker.matcher,
 			    tagBuilder = this.getTagBuilder();
 
-			var matchers = [new matchersNs.Hashtag({ tagBuilder: tagBuilder, serviceName: this.hashtag }), new matchersNs.StockSymbol({ tagBuilder: tagBuilder, serviceName: 'yahoo' }), new matchersNs.Email({ tagBuilder: tagBuilder }), new matchersNs.Phone({ tagBuilder: tagBuilder }), new matchersNs.Mention({ tagBuilder: tagBuilder, serviceName: this.mention }), new matchersNs.Url({ tagBuilder: tagBuilder, stripPrefix: this.stripPrefix, stripTrailingSlash: this.stripTrailingSlash, decodePercentEncoding: this.decodePercentEncoding })];
+			var matchers = [new matchersNs.Hashtag({ tagBuilder: tagBuilder, serviceName: this.hashtag }), new matchersNs.StockSymbol({ tagBuilder: tagBuilder, serviceName: 'yahoo' }), new matchersNs.Email({ tagBuilder: tagBuilder }), new matchersNs.Phone({ tagBuilder: tagBuilder }), new matchersNs.Mention({ tagBuilder: tagBuilder, serviceName: this.mention }), new matchersNs.Custom({ tagBuilder: tagBuilder, matcherRegex: /[\$][\(][a-zA-Z0-9_\-=@]{1,12}([\.][a-zA-Z]{1,3})?,[CBEFI]{1}[\)]/g }), new matchersNs.Url({ tagBuilder: tagBuilder, stripPrefix: this.stripPrefix, stripTrailingSlash: this.stripTrailingSlash })];
 
 			return this.matchers = matchers;
 		} else {
@@ -3577,6 +3581,8 @@ Autolinker.matcher.Phone = Autolinker.Util.extend(Autolinker.matcher.Matcher, {
  *
  * Matcher to find/replace username matches in an input string.
  */
+// eslint-disable-next-line no-unexpected-multiline
+var emojiRegex = '\uD83C\uDF00-\uD83D\uDDFF\uD83E\uDD00-\uD83E\uDDFF\uD83D\uDE00-\uD83D\uDE4F\uD83D\uDE80-\uD83D\uDEFF\u2600-\u26FF\u2700-\u27BF\uD83C\uDDE6-\uD83C\uDDFF\uD83C\uDD91-\uD83C\uDE51\uD83C\uDC04\uD83C\uDCCF\uD83C\uDD70-\uD83C\uDD71\uD83C\uDD7E-\uD83C\uDD7F\uD83C\uDD8E\u3030\u2B50\u2B55\u2934-\u2935\u2B05-\u2B07\u2B1B-\u2B1C\u3297\u3299\u303D\xA9\xAE\u2122\u23F3\u24C2\u23E9-\u23EF\u25B6\u23F8-\u23FA';
 Autolinker.matcher.Mention = Autolinker.Util.extend(Autolinker.matcher.Matcher, {
 
 	/**
@@ -3590,7 +3596,7 @@ Autolinker.matcher.Mention = Autolinker.Util.extend(Autolinker.matcher.Matcher, 
 	matcherRegexes: {
 		"twitter": new RegExp('@[_' + Autolinker.RegexLib.alphaNumericCharsStr + ']{1,20}', 'g'),
 		"instagram": new RegExp('@[_.' + Autolinker.RegexLib.alphaNumericCharsStr + ']{1,50}', 'g'),
-		"tradably": new RegExp('@[\(][_. ' + Autolinker.RegexLib.alphaNumericCharsStr + ']{2,50},[=' + Autolinker.RegexLib.alphaNumericCharsStr + ']{20}[\)]', 'g')
+		"tradably": new RegExp('@[\(][_. ' + Autolinker.RegexLib.alphaNumericCharsStr + emojiRegex + ']{2,50},[=' + Autolinker.RegexLib.alphaNumericCharsStr + ']{20}[\)]', 'gu')
 	},
 
 	/**
