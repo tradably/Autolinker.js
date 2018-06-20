@@ -762,7 +762,7 @@ describe( "Autolinker", function() {
 
 				it( "should include escaped parentheses in the URL", function() {
 					var result = autolinker.link( "Here's an example from CodingHorror: http://en.wikipedia.org/wiki/PC_Tools_%28Central_Point_Software%29" );
-					expect( result ).toBe( 'Here\'s an example from CodingHorror: <a href="http://en.wikipedia.org/wiki/PC_Tools_%28Central_Point_Software%29">en.wikipedia.org/wiki/PC_Tools_%28Central_Point_Software%29</a>' );
+					expect( result ).toBe( 'Here\'s an example from CodingHorror: <a href="http://en.wikipedia.org/wiki/PC_Tools_%28Central_Point_Software%29">en.wikipedia.org/wiki/PC_Tools_(Central_Point_Software)</a>' );
 				} );
 
 			} );
@@ -818,6 +818,20 @@ describe( "Autolinker", function() {
 					expect( result ).toBe( '<a href="http://google.no/maps/place/Gary\'s+Deli/@52.3664378,4.869345,18z/data=!4m7!1m4!3m3!1s0x47c609c14a6680df:0x643f005113531f15!2sBeertemple!3b1!3m1!1s0x0000000000000000:0x51a8a6adb4307be6?hl=no">google.no/maps/place/Gary\'s+Deli/@52.3664378,4.869345,18z/data=!4m7!1m4!3m3!1s0x47c609c14a6680df:0x643f005113531f15!2sBeertemple!3b1!3m1!1s0x0000000000000000:0x51a8a6adb4307be6?hl=no</a>' );
 				} );
 
+
+				it( "should decode emojis", function() {
+					var result = autolinker.link( "Danish flag emoji: https://emojipedia.org/%F0%9F%87%A9%F0%9F%87%B0" );
+
+					expect( result ).toBe( 'Danish flag emoji: <a href="https://emojipedia.org/%F0%9F%87%A9%F0%9F%87%B0">emojipedia.org/🇩🇰</a>' );
+				} );
+
+
+				it( "should HTML-encode escape-encoded special characters", function() {
+					var result = autolinker.link( "Link: http://example.com/%3c%3E%22%27%26" );
+
+					expect( result ).toBe( 'Link: <a href="http://example.com/%3c%3E%22%27%26">example.com/&lt;&gt;&quot;&#39;&amp;</a>' );
+				} );
+
 			} );
 
 
@@ -861,7 +875,7 @@ describe( "Autolinker", function() {
 
 				it( "should automatically link a URL with a complex hash (such as a Google Analytics url)", function() {
 					var result = autolinker.link( "Joe went to https://www.google.com/analytics/web/?pli=1#my-reports/Obif-Y6qQB2xAJk0ZZE1Zg/a4454143w36378534p43704543/%3F.date00%3D20120314%26_.date01%3D20120314%268534-table.rowStart%3D0%268534-table.rowCount%3D25/ and analyzed his analytics" );
-					expect( result ).toBe( 'Joe went to <a href="https://www.google.com/analytics/web/?pli=1#my-reports/Obif-Y6qQB2xAJk0ZZE1Zg/a4454143w36378534p43704543/%3F.date00%3D20120314%26_.date01%3D20120314%268534-table.rowStart%3D0%268534-table.rowCount%3D25/">google.com/analytics/web/?pli=1#my-reports/Obif-Y6qQB2xAJk0ZZE1Zg/a4454143w36378534p43704543/%3F.date00%3D20120314%26_.date01%3D20120314%268534-table.rowStart%3D0%268534-table.rowCount%3D25</a> and analyzed his analytics' );
+					expect( result ).toBe( 'Joe went to <a href="https://www.google.com/analytics/web/?pli=1#my-reports/Obif-Y6qQB2xAJk0ZZE1Zg/a4454143w36378534p43704543/%3F.date00%3D20120314%26_.date01%3D20120314%268534-table.rowStart%3D0%268534-table.rowCount%3D25/">google.com/analytics/web/?pli=1#my-reports/Obif-Y6qQB2xAJk0ZZE1Zg/a4454143w36378534p43704543/?.date00=20120314&amp;_.date01=20120314&amp;8534-table.rowStart=0&amp;8534-table.rowCount=25</a> and analyzed his analytics' );
 				} );
 
 
@@ -880,6 +894,17 @@ describe( "Autolinker", function() {
 				it( "should remove trailing slash from 'http://yahoo.com/sports/'", function() {
 					var result = autolinker.link( "Joe went to http://yahoo.com/sports/." );
 					expect( result ).toBe( 'Joe went to <a href="http://yahoo.com/sports/">yahoo.com/sports</a>.' );
+				} );
+
+			} );
+
+
+			describe( "multiple dots handling", function() {
+
+				it( "should autolink a url with multiple dots in the path", function() {
+					var result = autolinker.link( "https://gitlab.example.com/space/repo/compare/master...develop" );
+
+					expect( result ).toBe( '<a href="https://gitlab.example.com/space/repo/compare/master...develop">gitlab.example.com/space/repo/compare/master...develop</a>' );
 				} );
 
 			} );
@@ -1118,12 +1143,12 @@ describe( "Autolinker", function() {
                 expect( autolinker.link( "1-555-666-7777,234523#" ) ).toBe( '<a href="tel:15556667777,234523#">1-555-666-7777,234523#</a>' );
                 expect( autolinker.link( "+1-555-666-7777,234523#" ) ).toBe( '<a href="tel:+15556667777,234523#">+1-555-666-7777,234523#</a>' );
                 expect( autolinker.link( "+1-555-666-7777,234523,233" ) ).toBe( '<a href="tel:+15556667777,234523,233">+1-555-666-7777,234523,233</a>' );
-                expect( autolinker.link( "+22016350659,;,55#;;234   ,  3334443323" ) ).toBe( '<a href="tel:+22016350659,;,55#;;234">+22016350659,;,55#;;234</a>   ,  3334443323' );                
+                expect( autolinker.link( "+22016350659,;,55#;;234   ,  3334443323" ) ).toBe( '<a href="tel:+22016350659,;,55#;;234">+22016350659,;,55#;;234</a>   ,  3334443323' );
             } );
             it( "should NOT automatically link numbers when there are extensions with ,<numbers># followed by a number", function() {
                 expect( autolinker.link( "+1-555-666-7777,234523#233" ) ).toBe( '+1-555-666-7777,234523#233' );
                 expect( autolinker.link( "+1-555-666-7777,234523#abc" ) ).toBe( '<a href="tel:+15556667777,234523#">+1-555-666-7777,234523#</a>abc' );
-                expect( autolinker.link( "+1-555-666-7777,234523#,234523#abc" ) ).toBe( '<a href="tel:+15556667777,234523#,234523#">+1-555-666-7777,234523#,234523#</a>abc' );                
+                expect( autolinker.link( "+1-555-666-7777,234523#,234523#abc" ) ).toBe( '<a href="tel:+15556667777,234523#,234523#">+1-555-666-7777,234523#,234523#</a>abc' );
             } );
 		} );
 
@@ -1729,6 +1754,7 @@ describe( "Autolinker", function() {
 				expect( result ).toBe( tobe );
 			} );
 
+
 		} );
 
 
@@ -1897,6 +1923,44 @@ describe( "Autolinker", function() {
 				} );
 
 				expect( result ).toBe( '<a href="http://google.com/">http://google.com/</a>' );
+			} );
+
+		} );
+
+
+		describe( "`decodePercentEncoding` option", function() {
+
+			it( "by default, should decode percent-encoding", function() {
+				var result = Autolinker.link( "https://en.wikipedia.org/wiki/San_Jos%C3%A9", {
+					stripPrefix : false,
+					//decodePercentEncoding : true,  -- not providing this cfg
+					newWindow   : false
+				} );
+
+				expect( result ).toBe( '<a href="https://en.wikipedia.org/wiki/San_Jos%C3%A9">https://en.wikipedia.org/wiki/San_José</a>' );
+			} );
+
+
+			it( "when provided as `true`, should decode percent-encoding", function() {
+				var result = Autolinker.link( "https://en.wikipedia.org/wiki/San_Jos%C3%A9", {
+					stripPrefix           : false,
+					decodePercentEncoding : true,
+					newWindow             : false
+				} );
+
+				expect( result ).toBe( '<a href="https://en.wikipedia.org/wiki/San_Jos%C3%A9">https://en.wikipedia.org/wiki/San_José</a>' );
+			} );
+
+
+			it( "when provided as `false`, should not decode percent-encoding",
+			function() {
+				var result = Autolinker.link( "https://en.wikipedia.org/wiki/San_Jos%C3%A9", {
+					stripPrefix           : false,
+					decodePercentEncoding : false,
+					newWindow             : false
+				} );
+
+				expect( result ).toBe( '<a href="https://en.wikipedia.org/wiki/San_Jos%C3%A9">https://en.wikipedia.org/wiki/San_Jos%C3%A9</a>' );
 			} );
 
 		} );
@@ -2655,6 +2719,20 @@ describe( "Autolinker", function() {
 
 				return errorMsg.join( '\n' );
 			}
+		} );
+
+
+		it( "should be able to parse a very long string", function() {
+			var testStr = (function() {
+				var t = [];
+				for (var i = 0; i < 50000; i++) {
+					t.push( ' foo' );
+				}
+				return t.join( '' );
+			})();
+
+			var result = Autolinker.link( testStr );
+			expect( result ).toBe( testStr );
 		} );
 
 	} );

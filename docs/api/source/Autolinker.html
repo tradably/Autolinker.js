@@ -135,19 +135,21 @@ var Autolinker = function( cfg ) {
 	this.phone = typeof cfg.phone === &#39;boolean&#39; ? cfg.phone : true;
 	this.hashtag = cfg.hashtag || false;
 	this.mention = cfg.mention || false;
+	this.stockSymbol = cfg.stockSymbol || false;
 	this.newWindow = typeof cfg.newWindow === &#39;boolean&#39; ? cfg.newWindow : true;
 	this.stripPrefix = this.normalizeStripPrefixCfg( cfg.stripPrefix );
 	this.stripTrailingSlash = typeof cfg.stripTrailingSlash === &#39;boolean&#39; ? cfg.stripTrailingSlash : true;
+	this.decodePercentEncoding = typeof cfg.decodePercentEncoding === &#39;boolean&#39; ? cfg.decodePercentEncoding : true;
 
 	// Validate the value of the `mention` cfg
 	var mention = this.mention;
-	if( mention !== false &amp;&amp; mention !== &#39;twitter&#39; &amp;&amp; mention !== &#39;instagram&#39; ) {
+	if( mention !== false &amp;&amp; mention !== &#39;twitter&#39; &amp;&amp; mention !== &#39;instagram&#39;  &amp;&amp; mention !== &#39;tradably&#39; ) {
 		throw new Error( &quot;invalid `mention` cfg - see docs&quot; );
 	}
 
 	// Validate the value of the `hashtag` cfg
 	var hashtag = this.hashtag;
-	if( hashtag !== false &amp;&amp; hashtag !== &#39;twitter&#39; &amp;&amp; hashtag !== &#39;facebook&#39; &amp;&amp; hashtag !== &#39;instagram&#39; ) {
+	if( hashtag !== false &amp;&amp; hashtag !== &#39;twitter&#39; &amp;&amp; hashtag !== &#39;facebook&#39; &amp;&amp; hashtag !== &#39;instagram&#39; &amp;&amp; hashtag !== &#39;tradably&#39; ) {
 		throw new Error( &quot;invalid `hashtag` cfg - see docs&quot; );
 	}
 
@@ -368,6 +370,16 @@ Autolinker.prototype = {
 	 *
 	 *  Example when `true`: `http://google.com/` will be displayed as
 	 *  `http://google.com`.
+	 */
+
+<span id='Autolinker-cfg-decodePercentEncoding'>	/**
+</span>	 * @cfg {Boolean} [decodePercentEncoding=true]
+	 *
+	 * `true` to decode percent-encoded characters in URL matches, `false` to keep
+	 *  the percent-encoded characters.
+	 *
+	 *  Example when `true`: `https://en.wikipedia.org/wiki/San_Jos%C3%A9` will
+	 *  be displayed as `https://en.wikipedia.org/wiki/San_José`.
 	 */
 
 <span id='Autolinker-cfg-truncate'>	/**
@@ -697,10 +709,11 @@ Autolinker.prototype = {
 	removeUnwantedMatches : function( matches ) {
 		var remove = Autolinker.Util.remove;
 
-		if( !this.hashtag ) remove( matches, function( match ) { return match.getType() === &#39;hashtag&#39;; } );
-		if( !this.email )   remove( matches, function( match ) { return match.getType() === &#39;email&#39;; } );
-		if( !this.phone )   remove( matches, function( match ) { return match.getType() === &#39;phone&#39;; } );
-		if( !this.mention ) remove( matches, function( match ) { return match.getType() === &#39;mention&#39;; } );
+		if( !this.hashtag ) 		remove( matches, function( match ) { return match.getType() === &#39;hashtag&#39;; } );
+		if( !this.stockSymbol ) remove( matches, function( match ) { return match.getType() === &#39;stockSymbol&#39;; } );
+		if( !this.email )   		remove( matches, function( match ) { return match.getType() === &#39;email&#39;; } );
+		if( !this.phone )   		remove( matches, function( match ) { return match.getType() === &#39;phone&#39;; } );
+		if( !this.mention ) 		remove( matches, function( match ) { return match.getType() === &#39;mention&#39;; } );
 		if( !this.urls.schemeMatches ) {
 			remove( matches, function( m ) { return m.getType() === &#39;url&#39; &amp;&amp; m.getUrlMatchType() === &#39;scheme&#39;; } );
 		}
@@ -866,10 +879,11 @@ Autolinker.prototype = {
 
 			var matchers = [
 				new matchersNs.Hashtag( { tagBuilder: tagBuilder, serviceName: this.hashtag } ),
+				new matchersNs.StockSymbol( { tagBuilder: tagBuilder, serviceName: &#39;yahoo&#39; } ),
 				new matchersNs.Email( { tagBuilder: tagBuilder } ),
 				new matchersNs.Phone( { tagBuilder: tagBuilder } ),
 				new matchersNs.Mention( { tagBuilder: tagBuilder, serviceName: this.mention } ),
-				new matchersNs.Url( { tagBuilder: tagBuilder, stripPrefix: this.stripPrefix, stripTrailingSlash: this.stripTrailingSlash } )
+				new matchersNs.Url( { tagBuilder: tagBuilder, stripPrefix: this.stripPrefix, stripTrailingSlash: this.stripTrailingSlash, decodePercentEncoding: this.decodePercentEncoding } )
 			];
 
 			return ( this.matchers = matchers );
