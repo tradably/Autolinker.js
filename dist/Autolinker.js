@@ -2712,7 +2712,10 @@ Autolinker.match.StockSymbol = Autolinker.Util.extend(Autolinker.match.Match, {
 
 		switch (serviceName) {
 			case 'yahoo':
-				return 'https://finance.yahoo.com/quote/' + stockSymbol;
+				console.log(stockSymbol);
+				let type="equity";
+				let name="AAPL"
+				return `https://app.tradably.com/counter/${type}/${name}`;
 			default:
 				// Shouldn't happen because Autolinker's constructor should block any invalid values, but just in case.
 				throw new Error('Unknown service name to point stockSymbol to: ', serviceName);
@@ -2908,7 +2911,8 @@ Autolinker.match.Mention = Autolinker.Util.extend(Autolinker.match.Match, {
 			case 'instagram':
 				return 'https://instagram.com/' + this.mention;
 			case 'tradably':
-				return 'https://tradably.com/' + this.mention;
+				const userId = this.mention.substring(this.mention.indexOf(',')+1,this.mention.length-2);
+				return 'https://app.tradably.com/user/' + userId;
 			default:
 				// Shouldn't happen because Autolinker's constructor should block any invalid values, but just in case.
 				throw new Error('Unknown service name to point mention to: ', this.serviceName);
@@ -3531,7 +3535,7 @@ Autolinker.matcher.Phone = Autolinker.Util.extend(Autolinker.matcher.Matcher, {
   */
 	matcherRegex: /(?:(\+)?\d{1,3}[-\040.]?)?\(?\d{3}\)?[-\040.]?\d{3}[-\040.]?\d{4}([,;]*[0-9]+#?)*/g,
 
-	// ex: (123) 456-7890, 123 456 7890, 123-456-7890, +18004441234,,;,10226420346#, 
+	// ex: (123) 456-7890, 123 456 7890, 123-456-7890, +18004441234,,;,10226420346#,
 	// +1 (800) 444 1234, 10226420346#, 1-800-444-1234,1022,64,20346#
 
 	/**
@@ -4359,3 +4363,4 @@ Autolinker.truncate.TruncateSmart = function (url, truncateLen, ellipsisChars) {
 };
 return Autolinker;
 }));
+
