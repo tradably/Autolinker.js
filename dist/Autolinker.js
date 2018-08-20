@@ -2712,9 +2712,6 @@ Autolinker.match.StockSymbol = Autolinker.Util.extend(Autolinker.match.Match, {
 
 		switch (serviceName) {
 			case 'yahoo':
-				console.log(stockSymbol);
-				let type="equity";
-				let name="AAPL"
 				return `https://app.tradably.com/counter/${type}/${name}`;
 			default:
 				// Shouldn't happen because Autolinker's constructor should block any invalid values, but just in case.
