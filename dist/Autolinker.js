@@ -64,8 +64,6 @@
  *
  *     var linkedText = Autolinker.link( input, {
  *         replaceFn : function( match ) {
- *             console.log( "href = ", match.getAnchorHref() );
- *             console.log( "text = ", match.getAnchorText() );
  *
  *             switch( match.getType() ) {
  *                 case 'url' :
@@ -2712,6 +2710,9 @@ Autolinker.match.StockSymbol = Autolinker.Util.extend(Autolinker.match.Match, {
 
 		switch (serviceName) {
 			case 'yahoo':
+				const stockSymbolPart = this.getStockSymbol();
+					const type = stockSymbolPart.type;
+					const name = stockSymbolPart.symbol;
 				return `https://app.tradably.com/counter/${type}/${name}`;
 			default:
 				// Shouldn't happen because Autolinker's constructor should block any invalid values, but just in case.
