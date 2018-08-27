@@ -2909,7 +2909,7 @@ Autolinker.match.Mention = Autolinker.Util.extend(Autolinker.match.Match, {
 			case 'instagram':
 				return 'https://instagram.com/' + this.mention;
 			case 'tradably':
-				const userId = this.mention.substring(this.mention.indexOf(',')+1,this.mention.length-2);
+				const userId = this.mention.substring(this.mention.indexOf(',')+1,this.mention.length-1);
 				return 'https://app.tradably.com/user/' + userId;
 			default:
 				// Shouldn't happen because Autolinker's constructor should block any invalid values, but just in case.
