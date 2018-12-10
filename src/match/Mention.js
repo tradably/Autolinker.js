@@ -57,7 +57,7 @@ Autolinker.match.Mention = Autolinker.Util.extend( Autolinker.match.Match, {
 	 * @return {String}
 	 */
 	getMention : function() {
-		if (this.serviceName === 'tradably') {
+		if (this.serviceName === 'tradably' || this.serviceName === 'alphaco') {
     		var comps = this.mention.split(',');
     		return {
     			mention: comps[0].slice(1),
@@ -92,8 +92,14 @@ Autolinker.match.Mention = Autolinker.Util.extend( Autolinker.match.Match, {
 				return 'https://twitter.com/' + this.mention;
 			case 'instagram' :
 				return 'https://instagram.com/' + this.mention;
-			case 'tradably':
-				return 'https://tradably.com/' + this.mention;
+			case 'tradably': {
+				const userId = this.mention.substring(this.mention.indexOf(',')+1, this.mention.length-1);
+				return 'https://app.tradably.com/user/' + userId;
+			}
+			case 'alphaco': {
+				const userId = this.mention.substring(this.mention.indexOf(',')+1, this.mention.length-1);
+				return 'https://app.alphacollective.co/user/' + userId;
+			}
 			default :  // Shouldn't happen because Autolinker's constructor should block any invalid values, but just in case.
 				throw new Error( 'Unknown service name to point mention to: ', this.serviceName );
 		}
@@ -106,7 +112,7 @@ Autolinker.match.Mention = Autolinker.Util.extend( Autolinker.match.Match, {
 	 * @return {String}
 	 */
 	getAnchorText : function() {
-		if (this.serviceName === 'tradably'){
+		if (this.serviceName === 'tradably' || this.serviceName === 'alphaco'){
     		var name = this.mention.split(',')[0];
     		return '@' + name.slice(1);
         }

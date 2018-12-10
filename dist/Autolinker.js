@@ -64,6 +64,8 @@
  *
  *     var linkedText = Autolinker.link( input, {
  *         replaceFn : function( match ) {
+ *             console.log( "href = ", match.getAnchorHref() );
+ *             console.log( "text = ", match.getAnchorText() );
  *
  *             switch( match.getType() ) {
  *                 case 'url' :
@@ -144,13 +146,13 @@ var Autolinker = function Autolinker(cfg) {
 
 	// Validate the value of the `mention` cfg
 	var mention = this.mention;
-	if (mention !== false && mention !== 'twitter' && mention !== 'instagram' && mention !== 'tradably') {
+	if (mention !== false && mention !== 'twitter' && mention !== 'instagram' && mention !== 'tradably' && mention !== 'alphaco') {
 		throw new Error("invalid `mention` cfg - see docs");
 	}
 
 	// Validate the value of the `hashtag` cfg
 	var hashtag = this.hashtag;
-	if (hashtag !== false && hashtag !== 'twitter' && hashtag !== 'facebook' && hashtag !== 'instagram' && hashtag !== 'tradably') {
+	if (hashtag !== false && hashtag !== 'twitter' && hashtag !== 'facebook' && hashtag !== 'instagram' && hashtag !== 'tradably' && mention !== 'alphaco') {
 		throw new Error("invalid `hashtag` cfg - see docs");
 	}
 
@@ -2607,7 +2609,9 @@ Autolinker.match.Hashtag = Autolinker.Util.extend(Autolinker.match.Match, {
 			case 'instagram':
 				return 'https://instagram.com/explore/tags/' + hashtag;
 			case 'tradably':
-				return 'https://app.tradably.com/explore/tags/'+hashtag;
+				return 'https://app.tradably.com/explore/tags/' + hashtag;
+			case 'alphaco':
+				return 'https://app.alphacollective.co/explore/tags/' + hashtag;
 			default:
 				// Shouldn't happen because Autolinker's constructor should block any invalid values, but just in case.
 				throw new Error('Unknown service name to point hashtag to: ', serviceName);
@@ -2710,10 +2714,7 @@ Autolinker.match.StockSymbol = Autolinker.Util.extend(Autolinker.match.Match, {
 
 		switch (serviceName) {
 			case 'yahoo':
-				const stockSymbolPart = this.getStockSymbol();
-					const type = stockSymbolPart.type;
-					const name = stockSymbolPart.symbol;
-				return `https://app.tradably.com/counter/${type}/${name}`;
+				return 'https://finance.yahoo.com/quote/' + stockSymbol;
 			default:
 				// Shouldn't happen because Autolinker's constructor should block any invalid values, but just in case.
 				throw new Error('Unknown service name to point stockSymbol to: ', serviceName);
@@ -2875,7 +2876,7 @@ Autolinker.match.Mention = Autolinker.Util.extend(Autolinker.match.Match, {
   * @return {String}
   */
 	getMention: function getMention() {
-		if (this.serviceName === 'tradably') {
+		if (this.serviceName === 'tradably' || this.serviceName === 'alphaco') {
 			var comps = this.mention.split(',');
 			return {
 				mention: comps[0].slice(1),
@@ -2909,8 +2910,15 @@ Autolinker.match.Mention = Autolinker.Util.extend(Autolinker.match.Match, {
 			case 'instagram':
 				return 'https://instagram.com/' + this.mention;
 			case 'tradably':
-				const userId = this.mention.substring(this.mention.indexOf(',')+1,this.mention.length-1);
-				return 'https://app.tradably.com/user/' + userId;
+				{
+					var userId = this.mention.substring(this.mention.indexOf(',') + 1, this.mention.length - 1);
+					return 'https://app.tradably.com/user/' + userId;
+				}
+			case 'alphaco':
+				{
+					var _userId = this.mention.substring(this.mention.indexOf(',') + 1, this.mention.length - 1);
+					return 'https://app.alphacollective.co/user/' + _userId;
+				}
 			default:
 				// Shouldn't happen because Autolinker's constructor should block any invalid values, but just in case.
 				throw new Error('Unknown service name to point mention to: ', this.serviceName);
@@ -2923,7 +2931,7 @@ Autolinker.match.Mention = Autolinker.Util.extend(Autolinker.match.Match, {
   * @return {String}
   */
 	getAnchorText: function getAnchorText() {
-		if (this.serviceName === 'tradably') {
+		if (this.serviceName === 'tradably' || this.serviceName === 'alphaco') {
 			var name = this.mention.split(',')[0];
 			return '@' + name.slice(1);
 		}
@@ -3533,7 +3541,7 @@ Autolinker.matcher.Phone = Autolinker.Util.extend(Autolinker.matcher.Matcher, {
   */
 	matcherRegex: /(?:(\+)?\d{1,3}[-\040.]?)?\(?\d{3}\)?[-\040.]?\d{3}[-\040.]?\d{4}([,;]*[0-9]+#?)*/g,
 
-	// ex: (123) 456-7890, 123 456 7890, 123-456-7890, +18004441234,,;,10226420346#,
+	// ex: (123) 456-7890, 123 456 7890, 123-456-7890, +18004441234,,;,10226420346#, 
 	// +1 (800) 444 1234, 10226420346#, 1-800-444-1234,1022,64,20346#
 
 	/**
@@ -3593,7 +3601,8 @@ Autolinker.matcher.Mention = Autolinker.Util.extend(Autolinker.matcher.Matcher, 
 	matcherRegexes: {
 		"twitter": new RegExp('@[_' + Autolinker.RegexLib.alphaNumericCharsStr + ']{1,20}', 'g'),
 		"instagram": new RegExp('@[_.' + Autolinker.RegexLib.alphaNumericCharsStr + ']{1,50}', 'g'),
-		"tradably": new RegExp('@[\(][_. ' + Autolinker.RegexLib.alphaNumericCharsStr + ']{2,50},[=' + Autolinker.RegexLib.alphaNumericCharsStr + ']{20}[\)]', 'g')
+		"tradably": new RegExp('@[\(][_. ' + Autolinker.RegexLib.alphaNumericCharsStr + ']{2,50},[=' + Autolinker.RegexLib.alphaNumericCharsStr + ']{20}[\)]', 'g'),
+		"alphaco": new RegExp('@[\(][_.' + Autolinker.RegexLib.alphaNumericCharsStr + ']{2,50},[=' + Autolinker.RegexLib.alphaNumericCharsStr + ']{16}[\)]', 'g')
 	},
 
 	/**
@@ -4361,4 +4370,3 @@ Autolinker.truncate.TruncateSmart = function (url, truncateLen, ellipsisChars) {
 };
 return Autolinker;
 }));
-

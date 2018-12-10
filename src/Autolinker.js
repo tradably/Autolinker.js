@@ -126,13 +126,13 @@ var Autolinker = function( cfg ) {
 
 	// Validate the value of the `mention` cfg
 	var mention = this.mention;
-	if( mention !== false && mention !== 'twitter' && mention !== 'instagram'  && mention !== 'tradably' ) {
+	if( mention !== false && mention !== 'twitter' && mention !== 'instagram'  && mention !== 'tradably' && mention !== 'alphaco' ) {
 		throw new Error( "invalid `mention` cfg - see docs" );
 	}
 
 	// Validate the value of the `hashtag` cfg
 	var hashtag = this.hashtag;
-	if( hashtag !== false && hashtag !== 'twitter' && hashtag !== 'facebook' && hashtag !== 'instagram' && hashtag !== 'tradably' ) {
+	if( hashtag !== false && hashtag !== 'twitter' && hashtag !== 'facebook' && hashtag !== 'instagram' && hashtag !== 'tradably' && mention !== 'alphaco'  ) {
 		throw new Error( "invalid `hashtag` cfg - see docs" );
 	}
 
